@@ -144,7 +144,11 @@ def main():
         device = torch.device("cuda")
     else:
         device = torch.device("cpu")
+
+    # Model Load
     model = load_model(args.checkpoint, config)
+    # /
+
     logging.info(f"Loaded model parameters from {args.checkpoint}.")
     if args.normalize_before:
         assert hasattr(model, "mean"), "Feature stats are not registered."
@@ -159,7 +163,11 @@ def main():
             # generate
             c = torch.tensor(c, dtype=torch.float).to(device)
             start = time.time()
+
+            # The Generation
             y = model.inference(c, normalize_before=args.normalize_before).view(-1)
+            # /
+
             rtf = (time.time() - start) / (len(y) / config["sampling_rate"])
             pbar.set_postfix({"RTF": rtf})
             total_rtf += rtf

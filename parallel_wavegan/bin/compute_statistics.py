@@ -112,8 +112,9 @@ def main():
         dataset = MelSCPDataset(args.feats_scp)
     logging.info(f"The number of files = {len(dataset)}.")
 
-    # calculate statistics
+    # Calculate mean/var of each frequency axes
     scaler = StandardScaler()
+    # mel: (T_mel, Freq)
     for mel in tqdm(dataset):
         scaler.partial_fit(mel)
 

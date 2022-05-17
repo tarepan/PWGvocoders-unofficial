@@ -51,7 +51,7 @@ def logmelfilterbank(
         log_base (float): Log base. If set to None, use np.log.
 
     Returns:
-        ndarray: Log Mel filterbank feature (#frames, num_mels).
+        ndarray::(T_mel, Freq) - Mel-frequency Log(ref=1)-amplitude spectrogram
 
     """
     # get amplitude spectrogram
@@ -88,7 +88,16 @@ def logmelfilterbank(
 
 
 def main():
-    """Run preprocessing process."""
+    """Run preprocessing process.
+
+    waveform ---> silence trimming ---> global gain ---------------> audio
+                                    |->   resample  ->  wave2mel  -> melspec
+    """
+
+    # Args:
+    #     inputs: "--wav-scp", "--segments", "--rootdir"
+    #     output: "--dumpdir"
+    #     config: "--config", "--verbose"
     parser = argparse.ArgumentParser(
         description="Preprocess audio and then extract features (See detail in parallel_wavegan/bin/preprocess.py)."
     )
@@ -200,6 +209,10 @@ def main():
                 hop_length=config["trim_hop_size"],
             )
 
+        # Wave-to-Mel
+        #     x - waveform for melspec (could be resampled)
+        #     sampling_rate - `x`'s sampling rate
+        #     hop_size - STFT hop length (could be resampled)
         if "sampling_rate_for_feats" not in config:
             x = audio
             sampling_rate = config["sampling_rate"]
@@ -218,7 +231,6 @@ def main():
                 config["hop_size"] * config["sampling_rate_for_feats"] % fs == 0
             ), "hop_size must be int value. please check sampling_rate_for_feats is correct."
             hop_size = config["hop_size"] * config["sampling_rate_for_feats"] // fs
-
         # extract feature
         mel = logmelfilterbank(
             x,
@@ -242,6 +254,7 @@ def main():
         # apply global gain
         if config["global_gain_scale"] > 0.0:
             audio *= config["global_gain_scale"]
+        ## Validation
         if np.abs(audio).max() >= 1.0:
             logging.warn(
                 f"{utt_id} causes clipping. "

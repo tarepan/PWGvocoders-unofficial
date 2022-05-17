@@ -252,7 +252,7 @@ class HiFiGANGenerator(torch.nn.Module):
 
         Args:
             c (Union[Tensor, ndarray]): Input tensor (T, in_channels).
-            normalize_before (bool): Whether to perform normalization.
+            normalize_before (bool): Whether to perform normalization (`self.register_stats` is required)
 
         Returns:
             Tensor: Output tensor (T ** prod(upsample_scales), out_channels).
@@ -775,3 +775,4 @@ class HiFiGANMultiScaleMultiPeriodDiscriminator(torch.nn.Module):
         msd_outs = self.msd(x)
         mpd_outs = self.mpd(x)
         return msd_outs + mpd_outs
+
