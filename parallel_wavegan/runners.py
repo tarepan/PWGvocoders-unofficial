@@ -1,8 +1,10 @@
 """Inference runners"""
 
 import os.path
+from typing import Tuple
 
 import numpy as np
+from numpy.typing imort NDArray
 import torch
 import torch.cuda
 import yaml
@@ -11,6 +13,9 @@ import librosa.feature
 
 from .utils import load_model
 
+
+Wave = NDArray[np.float32]
+MelSpec = NDArray[np.float32]
 
 class HiFiGAN:
     """HiFi-GAN runner"""
@@ -26,22 +31,28 @@ class HiFiGAN:
         self.model = load_model(path_ckpt, self._config).eval().to(self._device)
         self.model.remove_weight_norm()
 
-    def decode(self, mel_spec: np.ndarray, exec_spec_norm: bool=True) -> np.ndarray:
+    def decode(self, mel_spec: MelSpec, exec_spec_norm: bool=True) -> Tuple[Wave, int]:
         """
         Convert a mel-spectrogram into a waveform.
 
         Args:
             mel_spec::(T, freq) - a normalized mel-spectrogram
             exec_spec_norm - Whether to implicitly normalize input spectrogram before conversion
-        Returns - a waveform
+        Returns:
+            wave_npy - a waveform
+            target_sr - sampling rate of the `wave_npy`
         """
+
+        target_sr = self._config["sampling_rate"]
 
         with torch.no_grad():
             # (T, freq) -> (T', 1) -> (T',)
             wave = self.model.inference(mel_spec, normalize_before=exec_spec_norm).view(-1)
-            return wave.to('cpu').detach().numpy().copy()
+            wave_npy = wave.to('cpu').detach().numpy().copy()
 
-    def preprocess(self, wave: np.ndarray, source_sr: int) -> np.ndarray:
+        return wave_npy, target_sr
+
+    def preprocess(self, wave: Wave, source_sr: int) -> Tuple[MelSpec, int]:
         """
         Preprocess a waveform into `self.decode` compatible mel-frequency log-amplitude spectrogram.
 
