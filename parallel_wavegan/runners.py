@@ -4,7 +4,7 @@ import os.path
 from typing import Tuple
 
 import numpy as np
-from numpy.typing imort NDArray
+from numpy.typing import NDArray
 import torch
 import torch.cuda
 import yaml
