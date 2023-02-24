@@ -11,11 +11,10 @@ import math
 import numpy as np
 import torch
 
-from parallel_wavegan.layers import Conv1d
-from parallel_wavegan.layers import Conv1d1x1
-from parallel_wavegan.layers import upsample
-from parallel_wavegan.layers import WaveNetResidualBlock as ResidualBlock
 from parallel_wavegan import models
+from parallel_wavegan.layers import Conv1d, Conv1d1x1
+from parallel_wavegan.layers import WaveNetResidualBlock as ResidualBlock
+from parallel_wavegan.layers import upsample
 from parallel_wavegan.utils import read_hdf5
 
 
@@ -142,11 +141,11 @@ class ParallelWaveGANGenerator(torch.nn.Module):
         if use_weight_norm:
             self.apply_weight_norm()
 
-    def forward(self, x, c):
+    def forward(self, z, c):
         """Calculate forward propagation.
 
         Args:
-            x (Tensor): Input noise signal (B, 1, T).
+            z (Tensor): Input noise signal (B, 1, T).
             c (Tensor): Local conditioning auxiliary features (B, C ,T').
 
         Returns:
@@ -156,10 +155,10 @@ class ParallelWaveGANGenerator(torch.nn.Module):
         # perform upsampling
         if c is not None and self.upsample_net is not None:
             c = self.upsample_net(c)
-            assert c.size(-1) == x.size(-1)
+            assert c.size(-1) == z.size(-1)
 
         # encode to hidden representation
-        x = self.first_conv(x)
+        x = self.first_conv(z)
         skips = 0
         for f in self.conv_layers:
             x, h = f(x, c)

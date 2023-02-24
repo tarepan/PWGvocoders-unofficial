@@ -11,14 +11,13 @@ import os
 import re
 import sys
 import tarfile
-
 from distutils.version import LooseVersion
-from filelock import FileLock
 
 import h5py
 import numpy as np
 import torch
 import yaml
+from filelock import FileLock
 
 PRETRAINED_MODEL_LIST = {
     "ljspeech_parallel_wavegan.v1": "1PdZv37JhAQH6AwNh31QlqruqrvjTBq7U",
@@ -315,9 +314,10 @@ def load_model(checkpoint, config=None, stats=None):
     import parallel_wavegan.models
 
     # get model and load parameters
+    generator_type = config.get("generator_type", "ParallelWaveGANGenerator")
     model_class = getattr(
         parallel_wavegan.models,
-        config.get("generator_type", "ParallelWaveGANGenerator"),
+        generator_type,
     )
     # workaround for typo #295
     generator_params = {
@@ -340,7 +340,7 @@ def load_model(checkpoint, config=None, stats=None):
             stats = os.path.join(dirname, f"stats.{ext}")
 
     # load stats
-    if stats is not None:
+    if stats is not None and generator_type != "VQVAE":
         model.register_stats(stats)
 
     # add pqmf if needed
