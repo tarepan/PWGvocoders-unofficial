@@ -128,19 +128,19 @@ class HiFiGANGenerator(torch.nn.Module):
                         use_causal_conv=use_causal_conv,
                     )
                 ]
-            self.output_conv = torch.nn.Sequential(
-                # NOTE(kan-bayashi): follow official implementation but why
-                #   using different slope parameter here? (0.1 vs. 0.01)
-                torch.nn.LeakyReLU(),
-                Conv1d(
-                    channels // (2 ** (i + 1)),
-                    out_channels,
-                    kernel_size,
-                    bias=bias,
-                    padding="same",
-                ),
-                torch.nn.Tanh(),
-            )
+        self.output_conv = torch.nn.Sequential(
+            # NOTE(kan-bayashi): follow official implementation but why
+            #   using different slope parameter here? (0.1 vs. 0.01)
+            torch.nn.LeakyReLU(),
+            Conv1d(
+                channels // (2 ** (i + 1)),
+                out_channels,
+                kernel_size,
+                bias=bias,
+                padding="same",
+            ),
+            torch.nn.Tanh(),
+        )
 
         # apply weight norm
         if use_weight_norm:
