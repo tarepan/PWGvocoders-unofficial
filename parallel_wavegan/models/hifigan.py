@@ -73,23 +73,14 @@ class HiFiGANGenerator(torch.nn.Module):
         self.use_causal_conv = use_causal_conv
 
         # PreConv
-        if not use_causal_conv:
-            self.input_conv = torch.nn.Conv1d(
-                in_channels,
-                channels,
-                kernel_size,
-                bias=bias,
-                padding="same",
-            )
-        else:
-            self.input_conv = CausalConv1d(     # diff: `torch.nn.Conv1d` -> `CausalConv1d`
-                in_channels,
-                channels,
-                kernel_size,
-                bias=bias,
-                                                # diff: `padding=...` -> None
-            )
-
+        Conv1d = torch.nn.Conv1d if not use_causal_conv else CausalConv1d
+        self.input_conv = Conv1d(
+            in_channels,
+            channels,
+            kernel_size,
+            bias=bias,
+            padding="same",
+        )
         self.upsamples = torch.nn.ModuleList()
         self.blocks = torch.nn.ModuleList()
         for i in range(len(upsample_kernel_sizes)):
@@ -147,34 +138,19 @@ class HiFiGANGenerator(torch.nn.Module):
                 ]
 
         # PostConv
-        if not use_causal_conv:
-            self.output_conv = torch.nn.Sequential(
-                # NOTE(kan-bayashi): follow official implementation but why
-                #   using different slope parameter here? (0.1 vs. 0.01)
-                torch.nn.LeakyReLU(),
-                torch.nn.Conv1d(
-                    channels // (2 ** (i + 1)),
-                    out_channels,
-                    kernel_size,
-                    bias=bias,
-                    padding="same",
-                ),
-                torch.nn.Tanh(),
-            )
-        else:
-            self.output_conv = torch.nn.Sequential(
-                # NOTE(kan-bayashi): follow official implementation but why
-                #   using different slope parameter here? (0.1 vs. 0.01)
-                torch.nn.LeakyReLU(),
-                CausalConv1d(                       # diff: `torch.nn.Conv1d` -> `CausalConv1d`
-                    channels // (2 ** (i + 1)),
-                    out_channels,
-                    kernel_size,
-                    bias=bias,
-                                                    # diff: `padding=...` -> None
-                ),
-                torch.nn.Tanh(),
-            )
+        self.output_conv = torch.nn.Sequential(
+            # NOTE(kan-bayashi): follow official implementation but why
+            #   using different slope parameter here? (0.1 vs. 0.01)
+            torch.nn.LeakyReLU(),
+            Conv1d(
+                channels // (2 ** (i + 1)),
+                out_channels,
+                kernel_size,
+                bias=bias,
+                padding="same",
+            ),
+            torch.nn.Tanh(),
+        )
 
         # apply weight norm
         if use_weight_norm:
