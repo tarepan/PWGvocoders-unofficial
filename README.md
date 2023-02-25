@@ -1,15 +1,23 @@
-# Parallel WaveGAN implementation with Pytorch
+<div align="center">
+
+# PWG : Various convolutional GAN vocoders <!-- omit in toc -->
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)][notebook]
+
+
+</div>
+
+Clone of unofficial PWG/MelGAN/MB-MelGAN/HiFi-GAN/StyleMelGAN implementations.  
+
+The non-AR convolutional GAN vocoder models:  
+
+- Parallel WaveGAN [![Paper_pwg][badge_pwg]][paper_pwg]
+- MelGAN [![Paper_mel][badge_mel]][paper_mel]
+- Multiband-MelGAN [![Paper_mbmel][badge_mbmel]][paper_mbmel]
+- HiFi-GAN [![Paper_hifi][badge_hifi]][paper_hifi]
+- StyleMelGAN [![Paper_stylemel][badge_stylemel]][paper_stylemel]
+
 
 ![](https://github.com/kan-bayashi/ParallelWaveGAN/workflows/CI/badge.svg) [![](https://img.shields.io/pypi/v/parallel-wavegan)](https://pypi.org/project/parallel-wavegan/) ![](https://img.shields.io/pypi/pyversions/parallel-wavegan) ![](https://img.shields.io/pypi/l/parallel-wavegan) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/espnet/notebook/blob/master/espnet2_tts_realtime_demo.ipynb)
-
-This repository provides **UNOFFICIAL** pytorch implementations of the following models:
-- [Parallel WaveGAN](https://arxiv.org/abs/1910.11480)
-- [MelGAN](https://arxiv.org/abs/1910.06711)
-- [Multiband-MelGAN](https://arxiv.org/abs/2005.05106)
-- [HiFi-GAN](https://arxiv.org/abs/2010.05646)
-- [StyleMelGAN](https://arxiv.org/abs/2011.01557)
-
-You can combine these state-of-the-art non-autoregressive models to build your own great vocoder!
 
 Please check our samples in [our demo HP](https://kan-bayashi.github.io/ParallelWaveGAN).
 
@@ -482,7 +490,16 @@ $ parallel-wavegan-decode \
 
 The author would like to thank Ryuichi Yamamoto ([@r9y9](https://github.com/r9y9)) for his great repository, paper, and valuable discussions.
 
-## Author
+[paper_pwg]:      https://arxiv.org/abs/1910.11480
+[paper_mel]:      https://arxiv.org/abs/1910.06711
+[paper_mbmel]:    https://arxiv.org/abs/2005.05106
+[paper_hifi]:     https://arxiv.org/abs/2010.05646
+[paper_stylemel]: https://arxiv.org/abs/2011.01557
 
-Tomoki Hayashi ([@kan-bayashi](https://github.com/kan-bayashi))  
-E-mail: `hayashi.tomoki<at>g.sp.m.is.nagoya-u.ac.jp`
+[badge_pwg]:      http://img.shields.io/badge/paper-arxiv.1910.11480-B31B1B.svg
+[badge_mel]:      http://img.shields.io/badge/paper-arxiv.1910.06711-B31B1B.svg
+[badge_mbmel]:    http://img.shields.io/badge/paper-arxiv.2005.05106-B31B1B.svg
+[badge_hifi]:     http://img.shields.io/badge/paper-arxiv.2010.05646-B31B1B.svg
+[badge_stylemel]: http://img.shields.io/badge/paper-arxiv.2011.01557-B31B1B.svg
+
+[notebook]: https://colab.research.google.com/github/tarepan/ParallelWaveGAN/blob/main/istftnet.ipynb
