@@ -74,81 +74,45 @@ class HiFiGANGenerator(torch.nn.Module):
 
         # PreConv
         Conv1d = torch.nn.Conv1d if not use_causal_conv else CausalConv1d
-        self.input_conv = Conv1d(
-            in_channels,
-            channels,
-            kernel_size,
-            bias=bias,
-            padding="same",
-        )
+        self.input_conv = Conv1d(in_channels, channels, kernel_size, bias=bias, padding="same")
         self.upsamples = torch.nn.ModuleList()
         self.blocks = torch.nn.ModuleList()
+
+        # 'up-MRF' stack
         for i in range(len(upsample_kernel_sizes)):
             assert upsample_kernel_sizes[i] == 2 * upsample_scales[i]
-
+            c_in, c_out = channels // (2**i), channels // (2 ** (i + 1))
             # Upsampling
+            k_up, s_up = upsample_kernel_sizes[i], upsample_scales[i]
             if not use_causal_conv:
                 self.upsamples += [
                     torch.nn.Sequential(
-                        getattr(torch.nn, nonlinear_activation)(
-                            **nonlinear_activation_params
-                        ),
-                        torch.nn.ConvTranspose1d(
-                            channels // (2**i),
-                            channels // (2 ** (i + 1)),
-                            upsample_kernel_sizes[i],
-                            upsample_scales[i],
-                            padding=upsample_scales[i] // 2 + upsample_scales[i] % 2,
-                            output_padding=upsample_scales[i] % 2,
-                            bias=bias,
-                        ),
+                        getattr(torch.nn, nonlinear_activation)(**nonlinear_activation_params),
+                        torch.nn.ConvTranspose1d(c_in, c_out, k_up, s_up, padding= s_up // 2 + s_up % 2, output_padding= s_up % 2, bias=bias),
                     )
                 ]
             else:
                 self.upsamples += [
                     torch.nn.Sequential(
-                        getattr(torch.nn, nonlinear_activation)(
-                            **nonlinear_activation_params
-                        ),
-                        CausalConvTranspose1d(            # diff: `torch.nn.ConvTranspose1d` -> `CausalConvTranspose1d`
-                            channels // (2**i),
-                            channels // (2 ** (i + 1)),
-                            upsample_kernel_sizes[i],
-                            upsample_scales[i],
-                                                          # diff: `padding=...`        -> None
-                                                          # diff: `output_padding=...` -> None
-                            bias=bias,
-                        ),
+                        getattr(torch.nn, nonlinear_activation)(**nonlinear_activation_params),
+                        CausalConvTranspose1d(c_in, c_out, k_up, s_up, bias=bias),
                     )
                 ]
-
             # MRF
             for j in range(len(resblock_kernel_sizes)):
                 self.blocks += [
                     ResidualBlock(
-                        kernel_size=resblock_kernel_sizes[j],
-                        channels=channels // (2 ** (i + 1)),
-                        dilations=resblock_dilations[j],
-                        bias=bias,
-                        use_additional_convs=use_additional_convs,
-                        nonlinear_activation=nonlinear_activation,
-                        nonlinear_activation_params=nonlinear_activation_params,
+                        kernel_size=resblock_kernel_sizes[j], channels=c_out, dilations=resblock_dilations[j], bias=bias,
+                        use_additional_convs=use_additional_convs, nonlinear_activation=nonlinear_activation, nonlinear_activation_params=nonlinear_activation_params,
                         use_causal_conv=use_causal_conv,
                     )
                 ]
 
         # PostConv
         self.output_conv = torch.nn.Sequential(
-            # NOTE(kan-bayashi): follow official implementation but why
-            #   using different slope parameter here? (0.1 vs. 0.01)
+            # NOTE(kan-bayashi): follow official implementation but why using different slope parameter here? (0.1 vs. 0.01)
             torch.nn.LeakyReLU(),
-            Conv1d(
-                channels // (2 ** (i + 1)),
-                out_channels,
-                kernel_size,
-                bias=bias,
-                padding="same",
-            ),
+            Conv1d(channels // (2 ** (i + 1)), out_channels, kernel_size, bias=bias, padding="same"),
             torch.nn.Tanh(),
         )
 
@@ -174,7 +138,7 @@ class HiFiGANGenerator(torch.nn.Module):
             # Up
             c = self.upsamples[i](c)
             # MRF
-            cs = 0.0  # initialize
+            cs = 0.0
             for j in range(self.num_blocks):
                 cs += self.blocks[i * self.num_blocks + j](c)
             c = cs / self.num_blocks
