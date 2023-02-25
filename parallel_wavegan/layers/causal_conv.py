@@ -21,9 +21,12 @@ class CausalConv1d(torch.nn.Module):
         bias=True,
         pad="ConstantPad1d",
         pad_params={"value": 0.0},
+        padding="same",
     ):
         """Initialize CausalConv1d module."""
         super(CausalConv1d, self).__init__()
+        assert padding is "same", "`CausalConv1d` currently support only `same` padding."
+
         self.pad = getattr(torch.nn, pad)((kernel_size - 1) * dilation, **pad_params)
         self.conv = torch.nn.Conv1d(
             in_channels, out_channels, kernel_size, dilation=dilation, bias=bias
