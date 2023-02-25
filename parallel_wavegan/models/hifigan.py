@@ -71,21 +71,14 @@ class HiFiGANGenerator(torch.nn.Module):
         self.num_upsamples = len(upsample_kernel_sizes)
         self.num_blocks = len(resblock_kernel_sizes)
         self.use_causal_conv = use_causal_conv
-        if not use_causal_conv:
-            self.input_conv = torch.nn.Conv1d(
-                in_channels,
-                channels,
-                kernel_size,
-                bias=bias,
-                padding=(kernel_size - 1) // 2,
-            )
-        else:
-            self.input_conv = CausalConv1d(
-                in_channels,
-                channels,
-                kernel_size,
-                bias=bias,
-            )
+        Conv1d = torch.nn.Conv1d if not use_causal_conv else CausalConv1d
+        self.input_conv = Conv1d(
+            in_channels,
+            channels,
+            kernel_size,
+            bias=bias,
+            padding="same",
+        )
         self.upsamples = torch.nn.ModuleList()
         self.blocks = torch.nn.ModuleList()
         for i in range(len(upsample_kernel_sizes)):
@@ -135,30 +128,16 @@ class HiFiGANGenerator(torch.nn.Module):
                         use_causal_conv=use_causal_conv,
                     )
                 ]
-        if not use_causal_conv:
             self.output_conv = torch.nn.Sequential(
                 # NOTE(kan-bayashi): follow official implementation but why
                 #   using different slope parameter here? (0.1 vs. 0.01)
                 torch.nn.LeakyReLU(),
-                torch.nn.Conv1d(
+                Conv1d(
                     channels // (2 ** (i + 1)),
                     out_channels,
                     kernel_size,
                     bias=bias,
-                    padding=(kernel_size - 1) // 2,
-                ),
-                torch.nn.Tanh(),
-            )
-        else:
-            self.output_conv = torch.nn.Sequential(
-                # NOTE(kan-bayashi): follow official implementation but why
-                #   using different slope parameter here? (0.1 vs. 0.01)
-                torch.nn.LeakyReLU(),
-                CausalConv1d(
-                    channels // (2 ** (i + 1)),
-                    out_channels,
-                    kernel_size,
-                    bias=bias,
+                    padding="same",
                 ),
                 torch.nn.Tanh(),
             )

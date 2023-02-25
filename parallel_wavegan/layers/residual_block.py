@@ -174,71 +174,39 @@ class HiFiGANResidualBlock(torch.nn.Module):
             self.convs2 = torch.nn.ModuleList()
         self.use_causal_conv = use_causal_conv
         assert kernel_size % 2 == 1, "Kernel size must be odd number."
+        Conv1d = torch.nn.Conv1d if not use_causal_conv else CausalConv1d
         for dilation in dilations:
-            if not use_causal_conv:
-                self.convs1 += [
-                    torch.nn.Sequential(
-                        getattr(torch.nn, nonlinear_activation)(
-                            **nonlinear_activation_params
-                        ),
-                        torch.nn.Conv1d(
-                            channels,
-                            channels,
-                            kernel_size,
-                            1,
-                            dilation=dilation,
-                            bias=bias,
-                            padding=(kernel_size - 1) // 2 * dilation,
-                        ),
-                    )
-                ]
-            else:
-                self.convs1 += [
-                    torch.nn.Sequential(
-                        getattr(torch.nn, nonlinear_activation)(
-                            **nonlinear_activation_params
-                        ),
-                        CausalConv1d(
-                            channels,
-                            channels,
-                            kernel_size,
-                            dilation=dilation,
-                            bias=bias,
-                        ),
-                    )
-                ]
+            self.convs1 += [
+                torch.nn.Sequential(
+                    getattr(torch.nn, nonlinear_activation)(
+                        **nonlinear_activation_params
+                    ),
+                    Conv1d(
+                        channels,
+                        channels,
+                        kernel_size,
+                        dilation=dilation,
+                        bias=bias,
+                        padding="same",
+                    ),
+                )
+            ]
             if use_additional_convs:
-                if not use_causal_conv:
-                    self.convs2 += [
-                        torch.nn.Sequential(
-                            getattr(torch.nn, nonlinear_activation)(
-                                **nonlinear_activation_params
-                            ),
-                            torch.nn.Conv1d(
-                                channels,
-                                channels,
-                                kernel_size,
-                                dilation=1,
-                                bias=bias,
-                                padding=(kernel_size - 1) // 2,
-                            ),
-                        )
-                    ]
-                else:
-                    self.convs2 += [
-                        torch.nn.Sequential(
-                            getattr(torch.nn, nonlinear_activation)(
-                                **nonlinear_activation_params
-                            ),
-                            CausalConv1d(
-                                channels,
-                                channels,
-                                kernel_size,
-                                dilation=1,
-                                bias=bias,
-                            ),
+                self.convs2 += [
+                    torch.nn.Sequential(
+                        getattr(torch.nn, nonlinear_activation)(
+                            **nonlinear_activation_params
                         ),
-                    ]
+                        Conv1d(
+                            channels,
+                            channels,
+                            kernel_size,
+                            dilation=1,
+                            bias=bias,
+                            padding="same",
+                        ),
+                    )
+                ]
 
     def forward(self, x):
         """Calculate forward propagation.
