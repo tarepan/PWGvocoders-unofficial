@@ -1,20 +1,22 @@
 <div align="center">
 
 # PWG : Various convolutional GAN vocoders <!-- omit in toc -->
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)][notebook]
+[![OpenInColab]][notebook]
 
 
 </div>
 
-Clone of unofficial PWG/MelGAN/MB-MelGAN/HiFi-GAN/StyleMelGAN implementations.  
+Clone of the unofficial ***PWG/MelGAN/MB-MelGAN/HiFi-GAN/StyleMelGAN*** implementations.  
 
 The non-AR convolutional GAN vocoder models:  
 
-- Parallel WaveGAN [![Paper_pwg][badge_pwg]][paper_pwg]
-- MelGAN [![Paper_mel][badge_mel]][paper_mel]
-- Multiband-MelGAN [![Paper_mbmel][badge_mbmel]][paper_mbmel]
-- HiFi-GAN [![Paper_hifi][badge_hifi]][paper_hifi]
-- StyleMelGAN [![Paper_stylemel][badge_stylemel]][paper_stylemel]
+|  Model           | paper                               |
+| ---------------- | ----------------------------------- |
+| Parallel WaveGAN | [![badge_pwg]][paper_pwg]           |
+| MelGAN           | [![badge_mel]][paper_mel]           |
+| Multiband-MelGAN | [![badge_mbmel]][paper_mbmel]       |
+| HiFi-GAN         | [![badge_hifi]][paper_hifi]         |
+| MelGAN           | [![badge_stylemel]][paper_stylemel] |
 
 
 ![](https://github.com/kan-bayashi/ParallelWaveGAN/workflows/CI/badge.svg) [![](https://img.shields.io/pypi/v/parallel-wavegan)](https://pypi.org/project/parallel-wavegan/) ![](https://img.shields.io/pypi/pyversions/parallel-wavegan) ![](https://img.shields.io/pypi/l/parallel-wavegan) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/espnet/notebook/blob/master/espnet2_tts_realtime_demo.ipynb)
@@ -502,4 +504,5 @@ The author would like to thank Ryuichi Yamamoto ([@r9y9](https://github.com/r9y9
 [badge_hifi]:     http://img.shields.io/badge/paper-arxiv.2010.05646-B31B1B.svg
 [badge_stylemel]: http://img.shields.io/badge/paper-arxiv.2011.01557-B31B1B.svg
 
-[notebook]: https://colab.research.google.com/github/tarepan/ParallelWaveGAN/blob/main/istftnet.ipynb
+[notebook]: https://colab.research.google.com/github/tarepan/ParallelWaveGAN/blob/main/pwg.ipynb
+[OpenInColab]: https://colab.research.google.com/assets/colab-badge.svg
