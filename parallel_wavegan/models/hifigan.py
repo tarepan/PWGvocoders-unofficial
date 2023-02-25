@@ -71,6 +71,8 @@ class HiFiGANGenerator(torch.nn.Module):
         self.num_upsamples = len(upsample_kernel_sizes)
         self.num_blocks = len(resblock_kernel_sizes)
         self.use_causal_conv = use_causal_conv
+
+        # PreConv
         if not use_causal_conv:
             self.input_conv = torch.nn.Conv1d(
                 in_channels,
@@ -80,16 +82,20 @@ class HiFiGANGenerator(torch.nn.Module):
                 padding=(kernel_size - 1) // 2,
             )
         else:
-            self.input_conv = CausalConv1d(
+            self.input_conv = CausalConv1d(     # diff: `torch.nn.Conv1d` -> `CausalConv1d`
                 in_channels,
                 channels,
                 kernel_size,
                 bias=bias,
+                                                # diff: `padding=...` -> None
             )
+
         self.upsamples = torch.nn.ModuleList()
         self.blocks = torch.nn.ModuleList()
         for i in range(len(upsample_kernel_sizes)):
             assert upsample_kernel_sizes[i] == 2 * upsample_scales[i]
+
+            # Upsampling
             if not use_causal_conv:
                 self.upsamples += [
                     torch.nn.Sequential(
@@ -113,15 +119,19 @@ class HiFiGANGenerator(torch.nn.Module):
                         getattr(torch.nn, nonlinear_activation)(
                             **nonlinear_activation_params
                         ),
-                        CausalConvTranspose1d(
+                        CausalConvTranspose1d(            # diff: `torch.nn.ConvTranspose1d` -> `CausalConvTranspose1d`
                             channels // (2**i),
                             channels // (2 ** (i + 1)),
                             upsample_kernel_sizes[i],
                             upsample_scales[i],
+                                                          # diff: `padding=...`        -> None
+                                                          # diff: `output_padding=...` -> None
                             bias=bias,
                         ),
                     )
                 ]
+
+            # MRF
             for j in range(len(resblock_kernel_sizes)):
                 self.blocks += [
                     ResidualBlock(
@@ -135,6 +145,8 @@ class HiFiGANGenerator(torch.nn.Module):
                         use_causal_conv=use_causal_conv,
                     )
                 ]
+
+        # PostConv
         if not use_causal_conv:
             self.output_conv = torch.nn.Sequential(
                 # NOTE(kan-bayashi): follow official implementation but why
@@ -154,11 +166,12 @@ class HiFiGANGenerator(torch.nn.Module):
                 # NOTE(kan-bayashi): follow official implementation but why
                 #   using different slope parameter here? (0.1 vs. 0.01)
                 torch.nn.LeakyReLU(),
-                CausalConv1d(
+                CausalConv1d(                       # diff: `torch.nn.Conv1d` -> `CausalConv1d`
                     channels // (2 ** (i + 1)),
                     out_channels,
                     kernel_size,
                     bias=bias,
+                                                    # diff: `padding=...` -> None
                 ),
                 torch.nn.Tanh(),
             )
@@ -182,7 +195,9 @@ class HiFiGANGenerator(torch.nn.Module):
         """
         c = self.input_conv(c)
         for i in range(self.num_upsamples):
+            # Up
             c = self.upsamples[i](c)
+            # MRF
             cs = 0.0  # initialize
             for j in range(self.num_blocks):
                 cs += self.blocks[i * self.num_blocks + j](c)
